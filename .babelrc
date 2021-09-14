@@ -1,0 +1,27 @@
+{
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "targets": {
+          "browsers": ["defaults"]
+        }
+      }
+    ],
+    "@babel/preset-react",
+    "@babel/preset-flow"
+  ],
+  "plugins": [
+    "@babel/plugin-syntax-dynamic-import",
+    [
+      "@babel/plugin-transform-runtime",
+      {
+        "regenerator": true
+      }
+    ],
+    ["@babel/plugin-proposal-class-properties", {
+      "loose": true
+    }],
+    "@babel/plugin-proposal-object-rest-spread"
+  ]
+}

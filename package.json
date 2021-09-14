@@ -1,0 +1,53 @@
+{
+  "name": "google-publisher-tag-react",
+  "version": "0.0.1",
+  "description": "library to implement google publisher tag react",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack serve --config ./webpack.app.config.js --mode development --port 3000"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hendrarfx/google-publisher-tag-react.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hendrarfx/google-publisher-tag-react/issues"
+  },
+  "homepage": "https://github.com/hendrarfx/google-publisher-tag-react#readme",
+  "dependencies": {
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "uuid": "s"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.13.14",
+    "@babel/core": "^7.15.5",
+    "@babel/node": "^7.13.13",
+    "@babel/plugin-proposal-class-properties": "^7.13.0",
+    "@babel/plugin-proposal-decorators": "^7.13.5",
+    "@babel/plugin-proposal-object-rest-spread": "^7.13.8",
+    "@babel/plugin-syntax-dynamic-import": "^7.8.3",
+    "@babel/plugin-syntax-import-meta": "^7.10.4",
+    "@babel/plugin-transform-runtime": "^7.13.10",
+    "@babel/preset-env": "^7.15.6",
+    "@babel/preset-flow": "^7.13.13",
+    "@babel/preset-react": "^7.14.5",
+    "babel-eslint": "^10.1.0",
+    "babel-loader": "^8.2.2",
+    "babel-watch": "^7.4.1",
+    "eslint": "5.16.0",
+    "eslint-config-prettier": "^4.1.0",
+    "eslint-plugin-flowtype": "^3.4.2",
+    "eslint-plugin-prettier": "^3.0.1",
+    "eslint-plugin-react": "^7.12.4",
+    "eslint-plugin-react-hooks": "^4.1.0",
+    "flow-bin": "^0.159.0",
+    "flow-typed": "^3.3.1",
+    "html-webpack-plugin": "^5.3.2",
+    "webpack": "^5.24.3",
+    "webpack-cli": "^4.5.0",
+    "webpack-dev-server": "^3.11.2"
+  }
+}
