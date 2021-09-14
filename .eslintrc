@@ -1,0 +1,31 @@
+{
+  "extends": [
+    "eslint:recommended",
+    "plugin:flowtype/recommended",
+    "plugin:react/recommended",
+    "plugin:prettier/recommended",
+    "prettier/flowtype",
+    "prettier/react"
+  ],
+  "plugins": ["prettier", "react-hooks"],
+  "rules": {
+    "prettier/prettier": "error",
+    "no-unused-vars": "warn",
+    "no-console": "warn",
+    "no-empty": "warn",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn"
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "es6": true,
+    "jest": true
+  },
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "legacyDecorators": true
+    }
+  }
+}
