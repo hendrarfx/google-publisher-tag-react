@@ -6,7 +6,7 @@ export type {
   GeneralSize,
   SlotRenderEndedEvent,
   SlotRequestedEvent,
-  SlotResponseReceived,
+  SlotResponseReceivedEvent,
   SlotVisibilityChangedEvent,
   ViewportSizeMapping,
   ImpressionViewableEvent,
