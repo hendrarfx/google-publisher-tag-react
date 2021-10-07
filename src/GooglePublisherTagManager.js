@@ -4,6 +4,15 @@ import type {
   ImpressionViewableEvent,
   SlotVisibilityChangedEvent,
   SlotRenderEndedEvent,
+  SlotRequestedEvent,
+  SlotResponseReceivedEvent,
+  SlotOnloadEvent,
+  ImpressionViewableEventCallbackType,
+  SlotOnloadEventCallbackType,
+  SlotRenderEndedEventCallbackType,
+  SlotRequestedEventCallbackType,
+  SlotResponseReceivedCallbackType,
+  SlotVisibilityChangedEventCallbackType,
   GoogleTag,
   PubAdsService,
   GeneralSize,
@@ -13,11 +22,8 @@ import type {
 } from "./definition";
 import { loadGPTScript } from "./utils";
 
-//This is a singleton class that will provide all function related to googletag
-
 type GlobalConfigAds = {
   enablePersonalizeAds?: boolean,
-  enableCookieOption?: boolean,
   enableLazyLoad?: boolean,
   enableSingleRequest?: boolean,
   targetingArguments?: Map<string, string | Array<string>>,
@@ -36,21 +42,42 @@ type GeneralSlotType = {
   adSenseAttributes?: Map<string, string | Array<string>>,
   targetingArguments?: Map<string, string | Array<string>>,
   shouldRefresh?: boolean,
-  loading?: boolean,
-  slot?: ?Slot
+  loaded?: boolean,
+  slot?: Slot,
+  disableInitialLoad?: boolean
 };
 
-class GooglePublisherTagManager extends EventEmitter {
+type GeneralRegisterSlotListener = (object: { slotId: string }) => void;
+
+//This is a singleton class that will provide all function related to googletag
+class GooglePublisherTagManager {
   static instance: ?GooglePublisherTagManager = null;
+  emitter: EventEmitter = new EventEmitter();
   enablePersonalizeAds: boolean = false;
-  enableCookieOption: boolean = false;
   enableLazyLoad: boolean = false;
   enableSingleRequest: boolean = true;
   globalTargetingArguments: Map<string, string | Array<string>> = new Map();
   singleRequestEnabled: boolean = true;
-  registeredSlots: { [string]: GeneralSlotType } = {};
+  registeredSlotsList: Map<string, GeneralSlotType> = new Map();
   disableInitialLoad: boolean = false;
   enableCollapseEmptyDivs: boolean = false;
+  disablePublisherConsole: boolean = false;
+
+  constructor() {
+    this.emitter = new EventEmitter().setMaxListeners(1);
+  }
+
+  static createInstance: () => GooglePublisherTagManager = () => {
+    var object = new GooglePublisherTagManager();
+    return object;
+  };
+
+  static getInstance: () => GooglePublisherTagManager = () => {
+    if (!GooglePublisherTagManager.instance) {
+      GooglePublisherTagManager.instance = GooglePublisherTagManager.createInstance();
+    }
+    return GooglePublisherTagManager.instance;
+  };
 
   //methods
   registerEventListener: (googletag: ?GoogleTag) => void = (
@@ -61,34 +88,46 @@ class GooglePublisherTagManager extends EventEmitter {
         const pubadsService: PubAdsService = googletag.pubads();
 
         pubadsService.addEventListener(
-          "slotRenderEnded",
-          (event: SlotRenderEndedEvent) => {
-            const slotId = event.slot.getSlotElementId();
-            this.emit("slotRenderEnded", { slotId, event });
+          "impressionViewable",
+          (event: ImpressionViewableEvent) => {
+            this.emitter.emit("impressionViewableListener", event);
           }
         );
 
         pubadsService.addEventListener(
-          "impressionViewable",
-          (event: ImpressionViewableEvent) => {
-            const slotId = event.slot.getSlotElementId();
-            this.emit("impressionViewable", { slotId, event });
+          "slotOnload",
+          (event: SlotOnloadEvent) => {
+            this.emitter.emit("slotOnloadListener", event);
+          }
+        );
+
+        pubadsService.addEventListener(
+          "slotRenderEnded",
+          (event: SlotRenderEndedEvent) => {
+            this.emitter.emit("slotRenderEndedListener", event);
+          }
+        );
+
+        pubadsService.addEventListener(
+          "slotRequested",
+          (event: SlotRequestedEvent) => {
+            this.emitter.emit("slotRequestedListener", event);
+          }
+        );
+
+        pubadsService.addEventListener(
+          "slotResponseReceived",
+          (event: SlotResponseReceivedEvent) => {
+            this.emitter.emit("slotResponseReceivedListener", event);
           }
         );
 
         pubadsService.addEventListener(
           "slotVisibilityChanged",
           (event: SlotVisibilityChangedEvent) => {
-            const slotId = event.slot.getSlotElementId();
-            this.emit("slotVisibilityChanged", { slotId, event });
+            this.emitter.emit("slotVisibilityChangedListener", event);
           }
         );
-
-        pubadsService.setRequestNonPersonalizedAds(
-          this.enablePersonalizeAds ? 0 : 1
-        );
-
-        pubadsService.setCookieOptions(this.enableCookieOption ? 0 : 1);
       });
     }
   };
@@ -109,23 +148,9 @@ class GooglePublisherTagManager extends EventEmitter {
     }
   };
 
-  //config global GPT
-  printConfig: () => void = () => {
-    console.log(`>> print config`, {
-      enableCookieOption: this.enableCookieOption,
-      enablePersonalizeAds: this.enablePersonalizeAds,
-      enableLazyLoad: this.enableLazyLoad,
-      enableSingleRequest: this.enableSingleRequest,
-      disableInitialLoad: this.disableInitialLoad,
-      globalTargetingArguments: this.globalTargetingArguments,
-      enableCollapseEmptyDivs: this.enableCollapseEmptyDivs
-    });
-  };
-
   setConfig: (config: GlobalConfigAds) => void = (config: GlobalConfigAds) => {
-    this.enableCookieOption = !!config.enableCookieOption;
     this.enablePersonalizeAds = !!config.enablePersonalizeAds;
-    this.enableLazyLoad = !!config.enableCookieOption;
+    this.enableLazyLoad = !!config.enableLazyLoad;
     this.enableSingleRequest = !!config.enableSingleRequest;
     this.disableInitialLoad = !!config.disableInitialLoad;
     this.enableCollapseEmptyDivs = !!config.enableCollapseEmptyDivs;
@@ -137,166 +162,270 @@ class GooglePublisherTagManager extends EventEmitter {
   //register and unreg slot
   //
   registerSlot: (slot: GeneralSlotType) => void = (slot: GeneralSlotType) => {
-    console.log(">> gpt manager >> register slot");
-    if (!this.registeredSlots[slot.slotId]) {
-      this.registeredSlots[slot.slotId] = {
-        ...slot,
-        loading: false
-      };
-
-      this.emit("registerSlot", { slotId: slot.slotId });
+    if (!this.registeredSlotsList.has(slot.slotId)) {
+      this.registeredSlotsList.set(slot.slotId, slot);
+      this.emitter.emit("registerSlotListener", { slotId: slot.slotId });
     }
   };
 
   unregisterSlot: (slotId: string) => void = (slotId: string) => {
     this.destroyGPTSlots([slotId]);
-    delete this.registeredSlots[slotId];
+    this.registeredSlotsList.delete(slotId);
   };
 
   unregisterAllSlot: () => void = () => {
-    const slotWillBeDestroyed = Object.keys(this.registeredSlots);
-    this.destroyGPTSlots(slotWillBeDestroyed);
-    this.registeredSlots = {};
+    this.destroyGPTSlots([...this.registeredSlotsList.keys()]);
+    this.registeredSlotsList.clear();
   };
 
   destroyGPTSlots: (slotIds: Array<string>) => Promise<mixed> = (
     slotIds: Array<string>
   ) => {
-    return new Promise(resolve => {
-      if (window.googletag && slotIds.length > 0) {
-        window.googletag.cmd.push(() => {
-          window.googletag.destroySlots(slotIds);
+    const googletag = window.googletag;
+    return new Promise((resolve, reject) => {
+      if (googletag?.apiReady && slotIds.length > 0) {
+        googletag.cmd.push(() => {
+          googletag.destroySlots(slotIds);
           resolve(slotIds);
         });
+      } else {
+        reject();
       }
     });
   };
 
   //Load Advertisement
-  loadAds: (adsToLoad: Array<GeneralSlotType>) => Promise<mixed> = (
-    adsToLoad: Array<GeneralSlotType>
+  definePageLevelSettings: (pubadsService: PubAdsService) => void = (
+    pubadsService: PubAdsService
   ) => {
+    //configure initial load
+    this.disableInitialLoad && pubadsService.disableInitialLoad();
+
+    //configure personalized ads
+    pubadsService.setRequestNonPersonalizedAds(
+      this.enablePersonalizeAds ? 0 : 1
+    );
+
+    //configure global targeting argument
+    this.globalTargetingArguments.size > 0 &&
+      this.globalTargetingArguments.forEach((value, key) => {
+        pubadsService.setTargeting(key, value);
+      });
+
+    this.enableLazyLoad &&
+      pubadsService.enableLazyLoad({
+        fetchMarginPercent: 500, // Fetch slots within 5 viewports.
+        renderMarginPercent: 200, // Render slots within 2 viewports.
+        mobileScaling: 2.0 // Double the above values on mobile.
+      });
+
+    //collapse div when ads is empty
+    this.enableCollapseEmptyDivs &&
+      pubadsService.collapseEmptyDivs(this.enableCollapseEmptyDivs);
+  };
+
+  loadAds: () => Promise<mixed> = () => {
     return new Promise(resolve => {
       const googletag: ?GoogleTag = window.googletag;
-      if (googletag && googletag.apiReady && adsToLoad.length > 0) {
-        googletag.cmd.push(() => {
-          adsToLoad.forEach(ads => {
-            const slot = this.registeredSlots[ads.slotId];
-            const definedSlot = slot.isOutOfPageSlot
-              ? googletag.defineOutOfPageSlot(slot.adUnit, slot.slotId)
-              : googletag.defineSlot(slot.adUnit, slot.size, slot.slotId);
-            if (definedSlot) {
-              slot.targetingArguments &&
-                slot.targetingArguments.forEach((key, value) => {
-                  definedSlot.setTargeting(`${value}`, key);
-                });
 
-              if (slot.sizeMapping && slot.sizeMapping.length > 0) {
-                let sizeMappingBuilder = googletag.sizeMapping();
-                slot.sizeMapping?.forEach(value => {
-                  sizeMappingBuilder = sizeMappingBuilder.addSize(
-                    value.viewport,
-                    value.sizes
-                  );
-                });
-                definedSlot.defineSizeMapping(sizeMappingBuilder.build());
+      if (
+        googletag &&
+        googletag.apiReady &&
+        this.registeredSlotsList.size > 0
+      ) {
+        googletag.cmd.push(() => {
+          const pubadsService = googletag.pubads();
+
+          //disable publsiher console
+          this.disablePublisherConsole && googletag.disablePublisherConsole();
+
+          this.definePageLevelSettings(pubadsService);
+          this.enableCollapseEmptyDivs &&
+            pubadsService.collapseEmptyDivs(this.enableCollapseEmptyDivs);
+
+          this.registeredSlotsList.forEach(ads => {
+            if (!ads.loaded) {
+              const adUnit = `${ads.networkId}/${ads.adUnit}`;
+              const definedSlot = ads.isOutOfPageSlot
+                ? googletag.defineOutOfPageSlot(adUnit, ads.slotId)
+                : googletag.defineSlot(adUnit, ads.size, ads.slotId);
+
+              if (definedSlot) {
+                ads.targetingArguments &&
+                  ads.targetingArguments.forEach((value, key) => {
+                    definedSlot.setTargeting(key, value);
+                  });
+
+                if (ads.sizeMapping && ads.sizeMapping.length > 0) {
+                  let sizeMappingBuilder = googletag.sizeMapping();
+                  ads.sizeMapping?.forEach(value => {
+                    sizeMappingBuilder = sizeMappingBuilder.addSize(
+                      value.viewport,
+                      value.sizes
+                    );
+                  });
+                  definedSlot.defineSizeMapping(sizeMappingBuilder.build());
+                }
+                definedSlot.addService(pubadsService);
+                ads.slot = definedSlot;
               }
-              slot.slot = definedSlot;
-              this.registeredSlots[slot.slotId].slot = definedSlot;
             }
           });
+          //configure SRA
+          this.enableSingleRequest && pubadsService.enableSingleRequest();
         });
 
-        this.configurePubAdsServiceOptions(googletag);
-
-        googletag.cmd.push(() => {
-          googletag.enableServices();
-          adsToLoad.forEach(slot => {
-            googletag.display(slot.slotId);
+        googletag.enableServices();
+        //enabling service and display ads
+        if (!this.disableInitialLoad) {
+          googletag.cmd.push(() => {
+            this.registeredSlotsList.forEach(slot => {
+              if (!slot.loaded) {
+                googletag.display(slot.slotId);
+                slot.loaded = true;
+              }
+            });
           });
-          resolve();
-        });
+        }
+        resolve();
       }
+    }).catch(error => {
+      console.log("error", error);
     });
   };
 
-  //targeting argument setter
-  configurePubAdsServiceOptions: (googletag: GoogleTag) => void = (
-    googletag: GoogleTag
-  ) => {
-    googletag.cmd.push(() => {
-      const pubadsService = googletag.pubads();
+  displayRegisteredAds: () => void = () => {
+    const googletag: ?GoogleTag = window.googletag;
+    if (googletag && googletag.apiReady) {
+      const filteredSlot = [];
 
-      //configure initial load
-      this.disableInitialLoad && pubadsService.disableInitialLoad();
-
-      //configure global targeting argument
-      this.globalTargetingArguments.forEach((key, value) => {
-        pubadsService.setTargeting(value, key);
+      googletag.cmd.push(() => {
+        this.registeredSlotsList.forEach(slot => {
+          if (!slot.loaded && slot.slot) {
+            filteredSlot.push(slot.slot);
+            googletag.display(slot.slotId);
+            slot.loaded = true;
+          }
+        });
       });
+      googletag.pubads().refresh(filteredSlot);
+    }
+  };
 
-      //confugure ads sense targeting argument
-      //do something
+  displaySingleSlot: (slotId: string) => void = (slotId: string) => {
+    const googletag: ?GoogleTag = window.googletag;
+    if (googletag && googletag.apiReady) {
+      const filteredSlot = [];
 
-      //configure cookie option
-      pubadsService.setCookieOptions(this.enableCookieOption ? 0 : 1);
-
-      //configure SRA
-      this.enableSingleRequest && pubadsService.enableSingleRequest();
-
-      //collapse div when ads is empty
-      pubadsService.collapseEmptyDivs(this.enableCollapseEmptyDivs);
-    });
+      googletag.cmd.push(() => {
+        this.registeredSlotsList.forEach(slot => {
+          if (!slot.loaded && slot.slot && slot.slotId === slotId) {
+            filteredSlot.push(slot.slot);
+            googletag.display(slot.slotId);
+            slot.loaded = true;
+          }
+        });
+      });
+      googletag.pubads().refresh(filteredSlot);
+    }
   };
 
   //
   // subscribe & unsub listener method
   //
 
-  subscribeRegisterSlotListener: (
-    event: (object: { slotId: string }) => void
-  ) => void = (event: (object: { slotId: string }) => void) => {
-    this.on("registerSlot", event);
-  };
-
-  unSubscribeRegisterSlotListener: (
-    event: (object: { slotId: string }) => void
-  ) => void = (event: (object: { slotId: string }) => void) => {
-    this.on("registerSlot", event);
-  };
-
-  unSubscribeSlotRenderEndedListener: (event: () => void) => void = (
-    event: () => void
+  subscribeRegisterSlotListener: GeneralRegisterSlotListener => void = (
+    event: GeneralRegisterSlotListener
   ) => {
-    this.removeListener("slotRenderEnded", event);
+    this.emitter.on("registerSlotListener", event);
   };
 
-  subscribeSlotVisibilityChangedListener: (event: () => void) => void = (
-    event: () => void
-  ) => {
-    this.on("slotVisibilityChanged", event);
+  unsubscribeRegisterSlotListener: (
+    event: GeneralRegisterSlotListener
+  ) => void = (event: GeneralRegisterSlotListener) => {
+    this.emitter.removeListener("registerSlotListener", event);
   };
 
-  unSubscribeSlotVisibilityChangedListener: (event: () => void) => void = (
-    event: () => void
-  ) => {
-    this.removeListener("slotVisibilityChanged", event);
+  //
+  subscribeImpressionViewableEventListener: (
+    event: ImpressionViewableEventCallbackType
+  ) => void = (event: ImpressionViewableEventCallbackType) => {
+    this.emitter.on("impressionViewableListener", event);
   };
 
-  subscribeSlotIsViewableListener: (event: () => void) => void = (
-    event: () => void
-  ) => {
-    this.on("slotVisibilityChanged", event);
+  unsubscribeImpressionViewableEventListener: (
+    event: ImpressionViewableEventCallbackType
+  ) => void = (event: ImpressionViewableEventCallbackType) => {
+    this.emitter.removeListener("impressionViewableListener", event);
   };
 
-  unSubscribeSlotIsViewableListener: (event: () => void) => void = (
-    event: () => void
-  ) => {
-    this.removeListener("slotVisibilityChanged", event);
+  //
+  subscribeSlotOnloadEventListener: (
+    event: SlotOnloadEventCallbackType
+  ) => void = (event: SlotOnloadEventCallbackType) => {
+    this.emitter.on("slotOnloadListener", event);
+  };
+
+  unsubscribeSlotOnloadEventListener: (
+    event: SlotOnloadEventCallbackType
+  ) => void = (event: SlotOnloadEventCallbackType) => {
+    this.emitter.removeListener("slotOnloadListener", event);
+  };
+
+  //
+  subscribeSlotRenderEndedEventListener: (
+    event: SlotRenderEndedEventCallbackType
+  ) => void = (event: SlotRenderEndedEventCallbackType) => {
+    this.emitter.on("slotRenderEndedListener", event);
+  };
+
+  unsubscribeSlotRenderEndedEventListener: (
+    event: SlotRenderEndedEventCallbackType
+  ) => void = (event: SlotRenderEndedEventCallbackType) => {
+    this.emitter.removeListener("slotRenderEndedListener", event);
+  };
+
+  //
+  subscribeSlotRequestedEventListener: (
+    event: SlotRequestedEventCallbackType
+  ) => void = (event: SlotRequestedEventCallbackType) => {
+    this.emitter.on("slotRequestedListener", event);
+  };
+
+  unsubscribeSlotRequestedEventListener: (
+    event: SlotRequestedEventCallbackType
+  ) => void = (event: SlotRequestedEventCallbackType) => {
+    this.emitter.removeListener("slotRequestedListener", event);
+  };
+
+  //
+  subscribeSlotResponseReceivedEventListener: (
+    event: SlotResponseReceivedCallbackType
+  ) => void = (event: SlotResponseReceivedCallbackType) => {
+    this.emitter.on("slotResponseReceivedListener", event);
+  };
+
+  unsubscribeSlotResponseReceivedEventListener: (
+    event: SlotResponseReceivedCallbackType
+  ) => void = (event: SlotResponseReceivedCallbackType) => {
+    this.emitter.removeListener("slotResponseReceivedListener", event);
+  };
+
+  //
+  subscribeSlotVisibilityChangedEventListener: (
+    event: SlotVisibilityChangedEventCallbackType
+  ) => void = (event: SlotVisibilityChangedEventCallbackType) => {
+    this.emitter.on("slotVisibilityChangedListener", event);
+  };
+
+  unsubscribeSlotVisibilityChangedEventListener: (
+    event: SlotVisibilityChangedEventCallbackType
+  ) => void = (event: SlotVisibilityChangedEventCallbackType) => {
+    this.emitter.removeListener("slotVisibilityChangedListener", event);
   };
 }
 
 export const useGPTManagerInstance = (): GooglePublisherTagManager =>
-  Object.assign(new GooglePublisherTagManager().setMaxListeners(0));
+  GooglePublisherTagManager.getInstance();
 
 export default GooglePublisherTagManager;

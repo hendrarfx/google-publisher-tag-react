@@ -97,7 +97,7 @@ export type SlotRenderEndedEvent = Event & {
 
 export type SlotRequestedEvent = Event;
 
-export type SlotResponseReceived = Event;
+export type SlotResponseReceivedEvent = Event;
 
 export type SlotVisibilityChangedEvent = Event & {
   inViewPercentage: number
@@ -122,7 +122,7 @@ declare class Service {
   ): Service;
   addEventListener(
     eventType: "slotResponseReceived",
-    listener: (event: SlotResponseReceived) => void
+    listener: (event: SlotResponseReceivedEvent) => void
   ): Service;
   addEventListener(
     eventType: "slotVisibilityChanged",
@@ -148,7 +148,7 @@ declare class Service {
   ): boolean;
   removeEventListener(
     eventType: "slotResponseReceived",
-    listener: (event: SlotResponseReceived) => void
+    listener: (event: SlotResponseReceivedEvent) => void
   ): boolean;
   removeEventListener(
     eventType: "slotVisibilityChanged",
@@ -268,7 +268,6 @@ declare class PubAdsService extends Service {
   set(key: string, value: string): PubAdsService;
   setCategoryExclusion(categoryExclusion: string): PubAdsService;
   setCentering(centerAds: boolean): void;
-  setCookieOptions(options: number): PubAdsService;
   setForceSafeFrame(forceSafeFrame: boolean): PubAdsService;
   setImaContent(imaContentId: string, imaCmsId: string): void;
   setLocation(address: string): PubAdsService;
@@ -319,4 +318,25 @@ export type ViewportSizeMapping = {
   sizes: GeneralSize
 };
 
+export type ImpressionViewableEventCallbackType = (
+  event: ImpressionViewableEvent
+) => void;
+export type SlotOnloadEventCallbackType = (event: SlotOnloadEvent) => void;
+export type SlotRenderEndedEventCallbackType = (
+  event: SlotRenderEndedEvent
+) => void;
+export type SlotRequestedEventCallbackType = (
+  event: SlotRequestedEvent
+) => void;
+export type SlotResponseReceivedCallbackType = (
+  event: SlotResponseReceivedEvent
+) => void;
+export type SlotVisibilityChangedEventCallbackType = (
+  event: SlotVisibilityChangedEvent
+) => void;
+
 export { PubAdsService, Slot };
+
+export type AdsSlotRef = {
+  current: null | { refreshAds: () => void, displaySlot: () => void }
+};
