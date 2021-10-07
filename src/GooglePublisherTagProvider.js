@@ -1,20 +1,21 @@
 //@flow
-import react from "react";
 import * as React from "react";
 import { useGPTManagerInstance } from "./GooglePublisherTagManager";
-import type { ViewportSizeMapping } from "./definition";
 
 type GooglePublisherTagContextType = {
   networkId: string,
-  subscribeNewSlot: (slotId: string) => void
+  subscribeNewSlot: (slotId: string) => void,
+  initialitationPhaseDone?: boolean,
+  adBlockEnabled?: boolean
 };
+
+const googleAdUrl: string = `https://securepubads.g.doubleclick.net/pagead/ppub_config?ippd=${window.location}`;
 
 type Props = {
   networkId: string,
   children: React.Node,
   disableInitialLoad?: boolean,
   enableCollapseEmptyDivs?: boolean,
-  enableCookieOption?: boolean,
   enablePersonalizeAds?: boolean,
   enableLazyLoad?: boolean,
   enableSingleRequest?: boolean,
@@ -22,12 +23,13 @@ type Props = {
   enableLoadSDKScriptByPromise?: boolean,
   targetingArguments?: Map<string, string | Array<string>>,
   adSenseAttributes?: Map<string, string | Array<string>>,
-  sizeMapping?: Array<ViewportSizeMapping>
+  disablePublisherConsole?: boolean
 };
 
 const GooglePublisherTagInitialContext = {
   networkId: "12345678",
-  subscribeNewSlot: () => {}
+  subscribeNewSlot: () => {},
+  initialitationPhaseDone: false
 };
 
 const GooglePublisherTagContext = React.createContext<GooglePublisherTagContextType>(
@@ -37,7 +39,7 @@ const GooglePublisherTagContext = React.createContext<GooglePublisherTagContextT
 export const useGooglePublisherTagProviderContext = (): GooglePublisherTagContextType =>
   React.useContext(GooglePublisherTagContext);
 
-const slots = new Set();
+const slots = new Set([]);
 
 const GooglePublisherTagProvider = (
   props: Props
@@ -54,21 +56,21 @@ const GooglePublisherTagProvider = (
     enableLoadSDKScriptByPromise,
     enableLoadLimitedAdsSDK
   } = props;
-  const [
-    subsbcribeListenerDone,
-    setSubsbcribeListenerDone
-  ] = React.useState<boolean>(false);
+  const [initialitationDone, setInitialitationDone] = React.useState<boolean>(
+    false
+  );
+  const [adBlockEnabled, setAdBlockEnabled] = React.useState<boolean>(false);
   const gptManager = useGPTManagerInstance();
 
   const setConfigToManager = React.useCallback(() => {
     gptManager.setConfig({
       enableLazyLoad: props.enableLazyLoad,
-      enableCookieOption: props.enableCookieOption,
       enableSingleRequest: props.enableSingleRequest,
       enablePersonalizeAds: props.enablePersonalizeAds,
       enableCollapseEmptyDivs: props.enableCollapseEmptyDivs,
       disableInitialLoad: props.disableInitialLoad,
-      targetingArguments: props.targetingArguments
+      targetingArguments: props.targetingArguments,
+      disablePublisherConsole: props.disablePublisherConsole
     });
   }, [props, gptManager]);
 
@@ -76,42 +78,62 @@ const GooglePublisherTagProvider = (
     slots.add(slotId);
   }, []);
 
-  const loadRegisteredAdsSlot = React.useCallback(
-    (object: { slotId: string }) => {
-      console.log(">> load register ads slot callback fired");
-    },
-    []
-  );
+  const loadRegisteredAdsSlot = React.useCallback(() => {
+    if (gptManager.registeredSlotsList.size >= slots.size && !adBlockEnabled) {
+      gptManager.loadAds();
+    }
+  }, [gptManager, adBlockEnabled]);
 
-  //step 1: when provider mounted, it will load gpt sdk and set config to manager
-  React.useEffect(() => {
+  const detectAdBlock = React.useCallback(async () => {
+    try {
+      await fetch(new Request(googleAdUrl)).catch(e => {
+        setAdBlockEnabled(true);
+      });
+    } catch (e) {
+      setAdBlockEnabled(true);
+    }
+  }, []);
+
+  const initialitationPhase = React.useCallback(() => {
+    setConfigToManager();
     gptManager.loadSDK(
       !!enableLoadSDKScriptByPromise,
       !!enableLoadLimitedAdsSDK
     );
-    setConfigToManager();
+    gptManager.subscribeRegisterSlotListener(loadRegisteredAdsSlot);
+    setInitialitationDone(true);
   }, []);
 
-  //step 2: when googletag ready, it will subscribe register listener to hear all child slot
+  //step 1: when provider mounted, it will load gpt sdk and set config to manager
   React.useEffect(() => {
-    if (window.googletag && !subsbcribeListenerDone) {
-      gptManager.subscribeRegisterSlotListener(loadRegisteredAdsSlot);
-      setSubsbcribeListenerDone(true);
+    if (!initialitationDone) {
+      detectAdBlock();
+      initialitationPhase();
+    } else if (
+      initialitationDone &&
+      !window.googletag.apiReady &&
+      gptManager.registeredSlotsList.size > 0
+    ) {
+      // handle window.googletag is not ready but initialitation is done
+      initialitationPhase();
+      setTimeout(() => {
+        loadRegisteredAdsSlot();
+      }, 500);
     }
-
     return () => {
-      if (subsbcribeListenerDone) {
-        gptManager.unSubscribeRegisterSlotListener(loadRegisteredAdsSlot);
-        setSubsbcribeListenerDone(false);
+      if (initialitationDone && gptManager.registeredSlotsList.size > 0) {
+        gptManager.unregisterAllSlot();
       }
     };
-  }, [gptManager, loadRegisteredAdsSlot, subsbcribeListenerDone]);
+  }, [initialitationDone]);
 
   return (
     <GooglePublisherTagContext.Provider
       value={{
         networkId,
-        subscribeNewSlot
+        subscribeNewSlot,
+        initialitationPhaseDone: initialitationDone,
+        adBlockEnabled
       }}
     >
       <React.Fragment>{children}</React.Fragment>

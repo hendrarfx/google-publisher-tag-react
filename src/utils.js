@@ -19,10 +19,10 @@ export const loadGPTScript = (
     }/tag/js/gpt.js`;
     scriptTag.async = true;
     scriptTag.type = "text/javascript";
-    scriptTag.onerror = function scriptTagOnError(errs) {
+    scriptTag.onerror = function onError(errs) {
       reject(errs);
     };
-    scriptTag.onload = function scriptTagOnLoad() {
+    scriptTag.onload = function onload() {
       resolve(window.googletag);
     };
     document.getElementsByTagName("head")[0].appendChild(scriptTag);
