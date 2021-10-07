@@ -1,6 +1,6 @@
 {
   "name": "google-publisher-tag-react",
-  "version": "1.0",
+  "version": "1.0.0",
   "description": "library to implement google publisher tag react",
   "main": "index.js",
   "scripts": {
