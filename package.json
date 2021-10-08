@@ -1,6 +1,6 @@
 {
   "name": "google-publisher-tag-react",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "library to implement google publisher tag react",
   "main": "index.js",
   "scripts": {
@@ -17,7 +17,10 @@
     "url": "https://github.com/hendrarfx/google-publisher-tag-react/issues"
   },
   "homepage": "https://github.com/hendrarfx/google-publisher-tag-react#readme",
-  "files": ["dist/*.js", "dist/**/&.js"],
+  "files": [
+    "dist/*.js",
+    "dist/**/&.js"
+  ],
   "dependencies": {
     "react": "^17.0.2",
     "uuid": "^8.3.2"
