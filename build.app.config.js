@@ -22,7 +22,7 @@ module.exports = {
     path: path.resolve("./dist"),
     filename: "index.js",
     libraryTarget: "commonjs2",
-    library: "@google-publisher-tag-react-lib"
+    library: "gpt-ads-react"
   },
   externals: [nodeExternals()],
   plugins:
