@@ -48,8 +48,10 @@ const App = () => {
 
 ### GooglePublisherTagProvider
 
-| Props | Type | Description |
-|networkId|string|some desc|
+| Props         | Type           | Desc  |
+| ------------- |:--------------:| -----:|
+| networkId     | string         | some desc |
+| networkId     | string         | some desc |
 
 ### AdsSlot 
 | Props | Type | Description |
