@@ -78,5 +78,5 @@ const App = () => {
 | onSlotResponseReceived |  SlotResponseReceivedCallbackType | some desc |
 | onSlotVisibilityChanged |  SlotVisibilityChangedEventCallbackType | some desc |
 
-##Flow Type Definition
+## Flow Type Definition
 You can look type defintion which is used in this project on src/definition.js
