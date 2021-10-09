@@ -70,7 +70,7 @@ const App = () => {
 | sizes | GeneralSize | some desc |
 | isOutOfPageSlot |  boolean | some desc |
 | sizeMapping |  Array<ViewportSizeMapping> | some desc |
-| targetingArguments |  Map<string, string | Array<string>> | some desc |
+| targetingArguments |  "Map<string, string | Array<string>>" | some desc |
 | onImpressionViewable |  ImpressionViewableEventCallbackType | some desc |
 | onSlotOnload |  SlotOnloadEventCallbackType | some desc |
 | onSlotRenderEnded |  SlotRenderEndedEventCallbackType | some desc |
