@@ -51,9 +51,29 @@ const App = () => {
 | Props         | Type           | Desc  |
 | ------------- |:--------------:| -----:|
 | networkId     | string         | some desc |
-| networkId     | string         | some desc |
+| children     | React.node         | some desc |
+| disableInitialLoad | boolean | some desc |
+| enableCollapseEmptyDivs | boolean | some desc |
+| enablePersonalizeAds | boolean | some desc |
+| enableLazyLoad | boolean | some desc |
+| enableSingleRequest | boolean | some desc |
+| enableLoadLimitedAdsSDK | boolean | some desc |
+| enableLoadSDKScriptByPromise | boolean | some desc |
+| targetingArguments | Map<string, string Array<string>> | some desc |
 
 ### AdsSlot 
 | Props | Type | Description |
 | networkId |  string | some desc |
+| slotId |  string | some desc |
+| adUnit | string | some desc |
+| sizes | GeneralSize | some desc |
+| isOutOfPageSlot |  boolean | some desc |
+| sizeMapping |  Array<ViewportSizeMapping> | some desc |
+| targetingArguments |  Map<string, string | Array<string>> | some desc |
+| onImpressionViewable |  ImpressionViewableEventCallbackType | some desc |
+| onSlotOnload |  SlotOnloadEventCallbackType | some desc |
+| onSlotRenderEnded |  SlotRenderEndedEventCallbackType | some desc |
+| onSlotRequested |  SlotRequestedEventCallbackType | some desc |
+| onSlotResponseReceived |  SlotResponseReceivedCallbackType | some desc |
+| onSlotVisibilityChanged |  SlotVisibilityChangedEventCallbackType | some desc |
 
