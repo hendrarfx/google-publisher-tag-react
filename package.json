@@ -18,8 +18,7 @@
   },
   "homepage": "https://github.com/hendrarfx/google-publisher-tag-react#readme",
   "files": [
-    "dist/*.js",
-    "dist/**/&.js"
+    "dist/*"
   ],
   "dependencies": {
     "react": "^17.0.2",
