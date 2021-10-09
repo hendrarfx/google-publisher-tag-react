@@ -62,7 +62,8 @@ const App = () => {
 | targetingArguments | Map<string, string Array<string>> | some desc |
 
 ### AdsSlot 
-| Props | Type | Description |
+| Props         | Type           | Desc  |
+| ------------- |:--------------:| -----:|
 | networkId |  string | some desc |
 | slotId |  string | some desc |
 | adUnit | string | some desc |
@@ -77,3 +78,5 @@ const App = () => {
 | onSlotResponseReceived |  SlotResponseReceivedCallbackType | some desc |
 | onSlotVisibilityChanged |  SlotVisibilityChangedEventCallbackType | some desc |
 
+##Flow Type Definition
+You can look type defintion which is used in this project on src/definition.js
