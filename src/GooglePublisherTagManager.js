@@ -139,12 +139,14 @@ class GooglePublisherTagManager {
     enableLoadSDKScriptByPromise: boolean,
     enableLoadLimitedAdsSDK: boolean
   ) => {
-    if (!window.googletag && enableLoadSDKScriptByPromise) {
-      loadGPTScript(enableLoadLimitedAdsSDK).then(googletag => {
-        this.registerEventListener(googletag);
-      });
-    } else {
-      this.registerEventListener(window.googletag);
+    if (window) {
+      if (!window.googletag && enableLoadSDKScriptByPromise) {
+        loadGPTScript(enableLoadLimitedAdsSDK).then(googletag => {
+          this.registerEventListener(googletag);
+        });
+      } else {
+        this.registerEventListener(window.googletag);
+      }
     }
   };
 
@@ -226,7 +228,7 @@ class GooglePublisherTagManager {
 
   loadAds: () => Promise<mixed> = () => {
     return new Promise(resolve => {
-      const googletag: ?GoogleTag = window.googletag;
+      const googletag: ?GoogleTag = window && window.googletag;
 
       if (
         googletag &&

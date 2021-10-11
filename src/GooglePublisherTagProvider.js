@@ -110,6 +110,7 @@ const GooglePublisherTagProvider = (
       detectAdBlock();
       initialitationPhase();
     } else if (
+      window &&
       initialitationDone &&
       !window.googletag.apiReady &&
       gptManager.registeredSlotsList.size > 0
