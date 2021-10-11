@@ -1,6 +1,6 @@
 {
   "name": "gpt-ads-react",
-  "version": "1.0.11",
+  "version": "1.0.16",
   "description": "library to implement google publisher tag in react",
   "main": "index.js",
   "scripts": {
@@ -16,6 +16,9 @@
   "bugs": {
     "url": "https://github.com/hendrarfx/google-publisher-tag-react/issues"
   },
+  "files": [
+    "dist/*"
+  ],
   "homepage": "https://github.com/hendrarfx/google-publisher-tag-react#readme",
   "dependencies": {
     "react": "^17.0.2",
