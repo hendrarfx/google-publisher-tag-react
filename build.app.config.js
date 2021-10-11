@@ -19,6 +19,7 @@ module.exports = {
   },
   entry: path.resolve("./src"),
   output: {
+    globalObject: "this",
     path: path.resolve("./dist"),
     filename: "index.js",
     libraryTarget: "commonjs2",
