@@ -10,6 +10,7 @@ export const loadGPTScript = (
   enableLoadLimitedAdsSDK: boolean
 ): Promise<?GoogleTag> => {
   return new Promise((resolve, reject) => {
+    const window = global.window;
     if (window) {
       window.googletag = window.googletag || {};
       window.googletag.cmd = window.googletag.cmd || [];

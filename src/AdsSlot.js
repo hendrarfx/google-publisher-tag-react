@@ -121,6 +121,7 @@ const AdsSlot = (props: Props) => {
   );
 
   const refreshAds = React.useCallback(() => {
+    const window = global.window;
     const googletag: ?GoogleTag = window && window.googletag;
     if (googletag && googletag.apiReady && slot) {
       googletag.pubads().refresh([slot]);

@@ -56,6 +56,7 @@ const GooglePublisherTagProvider = (
     enableLoadSDKScriptByPromise,
     enableLoadLimitedAdsSDK
   } = props;
+  const window = global.window;
   const [initialitationDone, setInitialitationDone] = React.useState<boolean>(
     false
   );

@@ -139,6 +139,7 @@ class GooglePublisherTagManager {
     enableLoadSDKScriptByPromise: boolean,
     enableLoadLimitedAdsSDK: boolean
   ) => {
+    const window = global.window;
     if (window) {
       if (!window.googletag && enableLoadSDKScriptByPromise) {
         loadGPTScript(enableLoadLimitedAdsSDK).then(googletag => {
@@ -183,6 +184,7 @@ class GooglePublisherTagManager {
   destroyGPTSlots: (slotIds: Array<string>) => Promise<mixed> = (
     slotIds: Array<string>
   ) => {
+    const window = global.window;
     const googletag = window.googletag;
     return new Promise((resolve, reject) => {
       if (googletag?.apiReady && slotIds.length > 0) {
@@ -228,6 +230,7 @@ class GooglePublisherTagManager {
 
   loadAds: () => Promise<mixed> = () => {
     return new Promise(resolve => {
+      const window = global.window;
       const googletag: ?GoogleTag = window && window.googletag;
 
       if (
@@ -299,6 +302,7 @@ class GooglePublisherTagManager {
   };
 
   displayRegisteredAds: () => void = () => {
+    const window = global.window;
     const googletag: ?GoogleTag = window.googletag;
     if (googletag && googletag.apiReady) {
       const filteredSlot = [];
@@ -317,6 +321,7 @@ class GooglePublisherTagManager {
   };
 
   displaySingleSlot: (slotId: string) => void = (slotId: string) => {
+    const window = global.window;
     const googletag: ?GoogleTag = window.googletag;
     if (googletag && googletag.apiReady) {
       const filteredSlot = [];
