@@ -35,7 +35,7 @@ type GeneralSlotType = {
   slotId: string,
   networkId: string,
   adUnit: string,
-  size: GeneralSize,
+  size?: GeneralSize,
   isOutOfPageSlot?: boolean,
   outOfPageFormat?: string | OutOfPageFormat,
   sizeMapping?: Array<ViewportSizeMapping>,
@@ -248,7 +248,9 @@ class GooglePublisherTagManager {
               const adUnit = `${ads.networkId}/${ads.adUnit}`;
               const definedSlot = ads.isOutOfPageSlot
                 ? googletag.defineOutOfPageSlot(adUnit, ads.slotId)
-                : googletag.defineSlot(adUnit, ads.size, ads.slotId);
+                : ads.size
+                ? googletag.defineSlot(adUnit, ads.size, ads.slotId)
+                : null;
 
               if (definedSlot) {
                 ads.targetingArguments &&

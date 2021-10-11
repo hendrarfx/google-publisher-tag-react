@@ -26,7 +26,7 @@ import { useGPTManagerInstance } from "./GooglePublisherTagManager";
 type Props = {
   networkId?: string,
   adUnit: string,
-  sizes: GeneralSize,
+  sizes?: GeneralSize,
   isOutOfPageSlot?: boolean,
   sizeMapping?: Array<ViewportSizeMapping>,
   targetingArguments?: Map<string, string | Array<string>>,
