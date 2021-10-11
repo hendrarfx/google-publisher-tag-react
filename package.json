@@ -17,7 +17,7 @@
     "url": "https://github.com/hendrarfx/google-publisher-tag-react/issues"
   },
   "files": [
-    "dist"
+    "dist/*"
   ],
   "homepage": "https://github.com/hendrarfx/google-publisher-tag-react#readme",
   "dependencies": {
