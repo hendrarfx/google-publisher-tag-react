@@ -9,8 +9,6 @@ type GooglePublisherTagContextType = {
   adBlockEnabled?: boolean
 };
 
-const googleAdUrl: string = `https://securepubads.g.doubleclick.net/pagead/ppub_config?ippd=${window.location}`;
-
 type Props = {
   networkId: string,
   children: React.Node,
@@ -87,9 +85,15 @@ const GooglePublisherTagProvider = (
 
   const detectAdBlock = React.useCallback(async () => {
     try {
-      await fetch(new Request(googleAdUrl)).catch(e => {
-        setAdBlockEnabled(true);
-      });
+      if (global.window) {
+        await fetch(
+          new Request(
+            `https://securepubads.g.doubleclick.net/pagead/ppub_config?ippd=${global.window.location}`
+          )
+        ).catch(e => {
+          setAdBlockEnabled(true);
+        });
+      }
     } catch (e) {
       setAdBlockEnabled(true);
     }

@@ -7,6 +7,7 @@ const BundleAnalyzerPlugin = require("webpack-bundle-analyzer")
 
 module.exports = {
   devtool: "source-map",
+  target: "web",
   module: {
     rules: [
       {
