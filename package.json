@@ -18,8 +18,10 @@
     "url": "https://github.com/hendrarfx/google-publisher-tag-react/issues"
   },
   "homepage": "https://github.com/hendrarfx/google-publisher-tag-react#readme",
+  "peerDependencies": {
+    "react": ">=16.8.0"
+  },
   "dependencies": {
-    "react": ">=16.8.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
@@ -47,6 +49,7 @@
     "flow-bin": "^0.159.0",
     "flow-copy-source": "^2.0.9",
     "flow-typed": "^3.3.1",
+    "react": ">=16.8.0",
     "webpack": "^5.24.3",
     "webpack-bundle-analyzer": "^4.4.2",
     "webpack-cli": "^4.5.0",
