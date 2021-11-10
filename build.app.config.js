@@ -23,7 +23,7 @@ module.exports = {
     globalObject: "this",
     path: path.resolve("./dist"),
     filename: "index.js",
-    libraryTarget: "commonjs2",
+    libraryTarget: "umd",
     library: "gpt-ads-react"
   },
   externals: [nodeExternals()],
