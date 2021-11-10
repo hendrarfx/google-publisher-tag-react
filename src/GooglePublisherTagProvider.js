@@ -44,8 +44,7 @@ const GooglePublisherTagProvider = (
 ): React$Element<
   React$ComponentType<{
     children?: React$Node,
-    value: GooglePublisherTagContextType,
-    ...
+    value: GooglePublisherTagContextType
   }>
 > => {
   const {
