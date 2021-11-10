@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/hendrarfx/google-publisher-tag-react#readme",
   "dependencies": {
-    "react": "^17.0.2",
+    "react": "^17.0.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
