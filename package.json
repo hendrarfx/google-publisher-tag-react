@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rm -rf ./dist && NODE_ENV=production webpack --config ./build.app.config.js && yarn copy-source",
     "copy-source": "flow-copy-source src dist",
-    "publish-package": "cp package.json dist && cp README.md dist"
+    "publish-package": "yarn run build && npm version patch && cp package.json dist && cp README.md dist && cd dist && npm publish"
   },
   "repository": {
     "type": "git",
