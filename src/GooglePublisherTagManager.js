@@ -90,6 +90,7 @@ class GooglePublisherTagManager {
         pubadsService.addEventListener(
           "impressionViewable",
           (event: ImpressionViewableEvent) => {
+            console.log(`>> GPTM impressionViewable`, event);
             this.emitter.emit("impressionViewableListener", event);
           }
         );
@@ -97,6 +98,7 @@ class GooglePublisherTagManager {
         pubadsService.addEventListener(
           "slotOnload",
           (event: SlotOnloadEvent) => {
+            console.log(`>> GPTM SlotOnloadEvent`, event);
             this.emitter.emit("slotOnloadListener", event);
           }
         );
@@ -104,6 +106,7 @@ class GooglePublisherTagManager {
         pubadsService.addEventListener(
           "slotRenderEnded",
           (event: SlotRenderEndedEvent) => {
+            console.log(`>> GPTM SlotRenderEndedEvent`, event);
             this.emitter.emit("slotRenderEndedListener", event);
           }
         );
@@ -111,6 +114,7 @@ class GooglePublisherTagManager {
         pubadsService.addEventListener(
           "slotRequested",
           (event: SlotRequestedEvent) => {
+            console.log(`>> GPTM SlotRequestedEvent`, event);
             this.emitter.emit("slotRequestedListener", event);
           }
         );
@@ -118,6 +122,7 @@ class GooglePublisherTagManager {
         pubadsService.addEventListener(
           "slotResponseReceived",
           (event: SlotResponseReceivedEvent) => {
+            console.log(`>> GPTM SlotResponseReceivedEvent`, event);
             this.emitter.emit("slotResponseReceivedListener", event);
           }
         );
@@ -125,6 +130,7 @@ class GooglePublisherTagManager {
         pubadsService.addEventListener(
           "slotVisibilityChanged",
           (event: SlotVisibilityChangedEvent) => {
+            console.log(`>> GPTM slotVisibilityChanged`, event);
             this.emitter.emit("slotVisibilityChangedListener", event);
           }
         );

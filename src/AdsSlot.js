@@ -70,6 +70,7 @@ const AdsSlot = (props: Props) => {
   const impressionViewableCallback = React.useCallback(
     (event: ImpressionViewableEvent) => {
       if (event.slot.getSlotElementId() === slotId) {
+        console.log(`>> Ads Slot ImpressionViewableEvent`, slotId, event);
         onImpressionViewable && onImpressionViewable(event);
       }
     },
@@ -78,6 +79,7 @@ const AdsSlot = (props: Props) => {
   const slotOnloadCallback = React.useCallback(
     (event: SlotOnloadEvent) => {
       if (event.slot.getSlotElementId() === slotId) {
+        console.log(`>> Ads Slot SlotOnloadEvent`, slotId, event);
         onSlotOnload && onSlotOnload(event);
       }
     },
@@ -87,6 +89,7 @@ const AdsSlot = (props: Props) => {
   const slotRenderEndedCallback = React.useCallback(
     (event: SlotRenderEndedEvent) => {
       if (event.slot.getSlotElementId() === slotId) {
+        console.log(`>> Ads Slot SlotRenderEndedEvent`, slotId, event);
         setEmpty(Boolean(event.creativeId));
         onSlotRenderEnded && onSlotRenderEnded(event);
       }
@@ -97,6 +100,7 @@ const AdsSlot = (props: Props) => {
   const slotRequestedCallback = React.useCallback(
     (event: SlotRequestedEvent) => {
       if (event.slot.getSlotElementId() === slotId) {
+        console.log(`>> Ads Slot slotRequestedCallback`, slotId, event);
         setSlot(event.slot);
         onSlotRequested && onSlotRequested(event);
       }
@@ -106,6 +110,7 @@ const AdsSlot = (props: Props) => {
   const slotResponseReceivedCallback = React.useCallback(
     (event: SlotResponseReceivedEvent) => {
       if (event.slot.getSlotElementId() === slotId) {
+        console.log(`>> Ads Slot SlotResponseReceivedEvent`, slotId, event);
         onSlotResponseReceived && onSlotResponseReceived(event);
       }
     },
@@ -114,6 +119,7 @@ const AdsSlot = (props: Props) => {
   const slotVisibilityChangedCallback = React.useCallback(
     (event: SlotVisibilityChangedEvent) => {
       if (event.slot.getSlotElementId() === slotId) {
+        console.log(`>> Ads Slot SlotVisibilityChangedEvent`, slotId, event);
         onSlotVisibilityChanged && onSlotVisibilityChanged(event);
       }
     },
