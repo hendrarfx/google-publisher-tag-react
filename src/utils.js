@@ -8,9 +8,9 @@ const LIMITED_GPT_SRC = "pagead2.googlesyndication.com";
 
 export const loadGPTScript = (
   enableLoadLimitedAdsSDK: boolean
-): Promise<?GoogleTag> => {
-  return new Promise((resolve, reject) => {
-    const window = global.window;
+): Promise<?GoogleTag> =>
+  new Promise((resolve, reject) => {
+    const { window } = global;
     if (window) {
       window.googletag = window.googletag || {};
       window.googletag.cmd = window.googletag.cmd || [];
@@ -30,4 +30,3 @@ export const loadGPTScript = (
       document.getElementsByTagName("head")[0].appendChild(scriptTag);
     }
   });
-};

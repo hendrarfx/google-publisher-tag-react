@@ -1,10 +1,11 @@
 //@flow
 import * as React from "react";
 import { useGPTManagerInstance } from "./GooglePublisherTagManager";
+import type { TargetingArgumentsType } from "./definition";
 
 type GooglePublisherTagContextType = {
   networkId: string,
-  subscribeNewSlot: (slotId: string) => void,
+  subscribeNewSlot: (slotId: string, object: any) => void,
   initialitationPhaseDone?: boolean,
   adBlockEnabled?: boolean
 };
@@ -19,14 +20,14 @@ type Props = {
   enableSingleRequest?: boolean,
   enableLoadLimitedAdsSDK?: boolean,
   enableLoadSDKScriptByPromise?: boolean,
-  targetingArguments?: Map<string, string | Array<string>>,
-  adSenseAttributes?: Map<string, string | Array<string>>,
+  targetingArguments?: TargetingArgumentsType,
+  adSenseAttributes?: TargetingArgumentsType,
   disablePublisherConsole?: boolean
 };
 
 const GooglePublisherTagInitialContext = {
   networkId: "12345678",
-  subscribeNewSlot: () => {},
+  subscribeNewSlot: (slotId: string, object: any) => {},
   initialitationPhaseDone: false
 };
 
@@ -37,7 +38,7 @@ const GooglePublisherTagContext = React.createContext<GooglePublisherTagContextT
 export const useGooglePublisherTagProviderContext = (): GooglePublisherTagContextType =>
   React.useContext(GooglePublisherTagContext);
 
-const slots = new Set([]);
+const slots = new Map([]);
 
 const GooglePublisherTagProvider = (
   props: Props
@@ -53,11 +54,12 @@ const GooglePublisherTagProvider = (
     enableLoadSDKScriptByPromise,
     enableLoadLimitedAdsSDK
   } = props;
-  const window = global.window;
+  const { window } = global;
   const [initialitationDone, setInitialitationDone] = React.useState<boolean>(
     false
   );
   const [adBlockEnabled, setAdBlockEnabled] = React.useState<boolean>(false);
+  const [loading, setLoading] = React.useState<boolean>(false);
   const gptManager = useGPTManagerInstance();
 
   const setConfigToManager = React.useCallback(() => {
@@ -72,15 +74,25 @@ const GooglePublisherTagProvider = (
     });
   }, [props, gptManager]);
 
-  const subscribeNewSlot = React.useCallback((slotId: string) => {
-    slots.add(slotId);
+  const subscribeNewSlot = React.useCallback((slotId: string, object: any) => {
+    slots.set(slotId, object);
   }, []);
 
   const loadRegisteredAdsSlot = React.useCallback(() => {
-    if (gptManager.registeredSlotsList.size >= slots.size && !adBlockEnabled) {
-      gptManager.loadAds();
+    const registeredSlotList = gptManager.getRegisteredSlotList();
+
+    if (registeredSlotList.size >= slots.size && !adBlockEnabled && !loading) {
+      setLoading(true);
+      gptManager.loadAds().then(() => {
+        setLoading(false);
+      });
+    } else if (registeredSlotList.size !== slots.size) {
+      //for some unknown reason, slot is not registered , although subscribe is success. To prevent that, slot must registeref again to manager
+      slots.forEach(slot => {
+        gptManager.registerSlot(slot);
+      });
     }
-  }, [gptManager, adBlockEnabled]);
+  }, [gptManager, adBlockEnabled, loading]);
 
   const detectAdBlock = React.useCallback(async () => {
     try {
@@ -117,7 +129,7 @@ const GooglePublisherTagProvider = (
       window &&
       initialitationDone &&
       !window.googletag.apiReady &&
-      gptManager.registeredSlotsList.size > 0
+      gptManager.getRegisteredSlotList().size > 0
     ) {
       // handle window.googletag is not ready but initialitation is done
       initialitationPhase();
@@ -126,7 +138,7 @@ const GooglePublisherTagProvider = (
       }, 500);
     }
     return () => {
-      if (initialitationDone && gptManager.registeredSlotsList.size > 0) {
+      if (initialitationDone && gptManager.getRegisteredSlotList().size > 0) {
         gptManager.unregisterAllSlot();
       }
     };

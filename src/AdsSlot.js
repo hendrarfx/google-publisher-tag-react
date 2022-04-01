@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/cognitive-complexity */
 //@flow
 import * as React from "react";
 import { v4 as uuidv4 } from "uuid";
@@ -18,7 +19,8 @@ import type {
   SlotVisibilityChangedEventCallbackType,
   Slot,
   GoogleTag,
-  AdsSlotRef
+  AdsSlotRef,
+  TargetingArgumentsType
 } from "./definition";
 import { useGooglePublisherTagProviderContext } from "./GooglePublisherTagProvider";
 import { useGPTManagerInstance } from "./GooglePublisherTagManager";
@@ -29,7 +31,7 @@ type Props = {
   sizes?: GeneralSize,
   isOutOfPageSlot?: boolean,
   sizeMapping?: Array<ViewportSizeMapping>,
-  targetingArguments?: Map<string, string | Array<string>>,
+  targetingArguments?: TargetingArgumentsType,
   onImpressionViewable?: ImpressionViewableEventCallbackType,
   onSlotOnload?: SlotOnloadEventCallbackType,
   onSlotRenderEnded?: SlotRenderEndedEventCallbackType,
@@ -37,10 +39,10 @@ type Props = {
   onSlotResponseReceived?: SlotResponseReceivedCallbackType,
   onSlotVisibilityChanged?: SlotVisibilityChangedEventCallbackType,
   slotId?: string,
-  forwardRef?: AdsSlotRef
+  forwardRef?: AdsSlotRef,
+  disableRenderDiv?: boolean
 };
 
-// eslint-disable-next-line react/display-name
 const AdsSlot = (props: Props) => {
   const ref = React.useRef(null);
   const [slotId, setSlotId] = React.useState<string>("");
@@ -70,7 +72,7 @@ const AdsSlot = (props: Props) => {
   const impressionViewableCallback = React.useCallback(
     (event: ImpressionViewableEvent) => {
       if (event.slot.getSlotElementId() === slotId) {
-        console.log(`>> Ads Slot ImpressionViewableEvent`, slotId, event);
+        //   console.log(`>> Ads Slot ImpressionViewableEvent`, slotId, event);
         onImpressionViewable && onImpressionViewable(event);
       }
     },
@@ -79,7 +81,7 @@ const AdsSlot = (props: Props) => {
   const slotOnloadCallback = React.useCallback(
     (event: SlotOnloadEvent) => {
       if (event.slot.getSlotElementId() === slotId) {
-        console.log(`>> Ads Slot SlotOnloadEvent`, slotId, event);
+        //   console.log(`>> Ads Slot SlotOnloadEvent`, slotId, event);
         onSlotOnload && onSlotOnload(event);
       }
     },
@@ -89,7 +91,7 @@ const AdsSlot = (props: Props) => {
   const slotRenderEndedCallback = React.useCallback(
     (event: SlotRenderEndedEvent) => {
       if (event.slot.getSlotElementId() === slotId) {
-        console.log(`>> Ads Slot SlotRenderEndedEvent`, slotId, event);
+        // console.log(`>> Ads Slot SlotRenderEndedEvent`, slotId, event);
         setEmpty(Boolean(event.creativeId));
         onSlotRenderEnded && onSlotRenderEnded(event);
       }
@@ -100,7 +102,7 @@ const AdsSlot = (props: Props) => {
   const slotRequestedCallback = React.useCallback(
     (event: SlotRequestedEvent) => {
       if (event.slot.getSlotElementId() === slotId) {
-        console.log(`>> Ads Slot slotRequestedCallback`, slotId, event);
+        // console.log(`>> Ads Slot slotRequestedCallback`, slotId, event);
         setSlot(event.slot);
         onSlotRequested && onSlotRequested(event);
       }
@@ -110,7 +112,7 @@ const AdsSlot = (props: Props) => {
   const slotResponseReceivedCallback = React.useCallback(
     (event: SlotResponseReceivedEvent) => {
       if (event.slot.getSlotElementId() === slotId) {
-        console.log(`>> Ads Slot SlotResponseReceivedEvent`, slotId, event);
+        // console.log(`>> Ads Slot SlotResponseReceivedEvent`, slotId, event);
         onSlotResponseReceived && onSlotResponseReceived(event);
       }
     },
@@ -119,7 +121,7 @@ const AdsSlot = (props: Props) => {
   const slotVisibilityChangedCallback = React.useCallback(
     (event: SlotVisibilityChangedEvent) => {
       if (event.slot.getSlotElementId() === slotId) {
-        console.log(`>> Ads Slot SlotVisibilityChangedEvent`, slotId, event);
+        //    console.log(`>> Ads Slot SlotVisibilityChangedEvent`, slotId, event);
         onSlotVisibilityChanged && onSlotVisibilityChanged(event);
       }
     },
@@ -127,7 +129,7 @@ const AdsSlot = (props: Props) => {
   );
 
   const refreshAds = React.useCallback(() => {
-    const window = global.window;
+    const { window } = global;
     const googletag: ?GoogleTag = window && window.googletag;
     if (googletag && googletag.apiReady && slot) {
       googletag.pubads().refresh([slot]);
@@ -140,9 +142,9 @@ const AdsSlot = (props: Props) => {
 
   React.useEffect(() => {
     if (!subscribeSlotToProvider) {
-      const uuid = props.slotId ? props.slotId : `${uuidv4()}`;
-      setSlotId(uuid);
-      providerContext.subscribeNewSlot(uuid);
+      const uniqueId = props.slotId ? props.slotId : `${uuidv4()}`;
+      setSlotId(uniqueId);
+
       setSubscribeSlotToProvider(true);
     }
     if (
@@ -150,7 +152,7 @@ const AdsSlot = (props: Props) => {
       slotId &&
       subscribeSlotToProvider
     ) {
-      gptManager.registerSlot({
+      const object = {
         slotId: props.slotId ? props.slotId : slotId,
         networkId: props.networkId
           ? props.networkId
@@ -162,7 +164,10 @@ const AdsSlot = (props: Props) => {
         targetingArguments: props.targetingArguments,
         shouldRefresh: false,
         loaded: false
-      });
+      };
+      providerContext.subscribeNewSlot(slotId, object);
+      gptManager.registerSlot(object);
+
       gptManager.subscribeImpressionViewableEventListener(
         impressionViewableCallback
       );
@@ -220,7 +225,11 @@ const AdsSlot = (props: Props) => {
     }
   }, [divInjectSuccess, ref, slotId]);
 
-  return !empty ? <div id={slotId} ref={ref}></div> : <div id={slotId} />;
+  return props.disableRenderDiv ? null : !empty ? (
+    <div id={slotId} ref={ref}></div>
+  ) : (
+    <div id={slotId} />
+  );
 };
 
 export default (React.forwardRef<Props, AdsSlotRef>((props, ref) => (

@@ -4,6 +4,8 @@ export { useGPTManagerInstance } from "./GooglePublisherTagManager";
 export { default as GooglePublisherTagProvider } from "./GooglePublisherTagProvider";
 export type {
   GeneralSize,
+  MultiSize,
+  TargetingArgumentsType,
   SlotRenderEndedEvent,
   SlotRequestedEvent,
   SlotResponseReceivedEvent,
