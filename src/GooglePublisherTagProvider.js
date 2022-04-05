@@ -1,7 +1,7 @@
 //@flow
 import * as React from "react";
 import { useGPTManagerInstance } from "./GooglePublisherTagManager";
-import type { TargetingArgumentsType } from "./definition";
+import type { GoogleTag, TargetingArgumentsType } from "./definition";
 
 type GooglePublisherTagContextType = {
   networkId: string,
@@ -40,7 +40,7 @@ export const useGooglePublisherTagProviderContext = (): GooglePublisherTagContex
 
 const slots = new Map([]);
 
-const GooglePublisherTagProvider = (
+const GooglePublisherTagProvider2 = (
   props: Props
 ): React$Element<
   React$ComponentType<{
@@ -54,7 +54,7 @@ const GooglePublisherTagProvider = (
     enableLoadSDKScriptByPromise,
     enableLoadLimitedAdsSDK
   } = props;
-  const { window } = global;
+
   const [initialitationDone, setInitialitationDone] = React.useState<boolean>(
     false
   );
@@ -96,17 +96,11 @@ const GooglePublisherTagProvider = (
 
   const detectAdBlock = React.useCallback(async () => {
     try {
-      if (global.window) {
-        await fetch(
-          new Request(
-            `https://securepubads.g.doubleclick.net/pagead/ppub_config?ippd=${global.window.location}`
-          )
-        ).catch(e => {
-          setAdBlockEnabled(true);
-        });
-      }
+      const googletag: ?GoogleTag = gptManager.getGoogletag();
+      setAdBlockEnabled(!!googletag?.apiReady);
+      return googletag ? googletag.apiReady : true;
     } catch (e) {
-      setAdBlockEnabled(true);
+      return true;
     }
   }, []);
 
@@ -158,4 +152,4 @@ const GooglePublisherTagProvider = (
   );
 };
 
-export default GooglePublisherTagProvider;
+export default GooglePublisherTagProvider2;

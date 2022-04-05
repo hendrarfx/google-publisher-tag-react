@@ -337,11 +337,14 @@ export type SlotVisibilityChangedEventCallbackType = (
 
 export { PubAdsService, Slot };
 
-export type AdsSlotRef = {
-  current: null | { refreshAds: () => void, displaySlot: () => void }
-};
-
 export type TargetingArgumentsType = Map<
   string,
   string | Array<string> | number
 >;
+
+export type AdsSlotRef = {
+  current: null | {
+    refreshAds: () => void,
+    displaySlot: () => void
+  }
+};

@@ -22,6 +22,7 @@ import type {
   TargetingArgumentsType
 } from "./definition";
 import { loadGPTScript } from "./utils";
+import { all } from "lodash/fp";
 
 type GlobalConfigAds = {
   enablePersonalizeAds?: boolean,
@@ -79,12 +80,15 @@ class GooglePublisherTagManager {
   };
 
   //methods
+
+  getGoogletag: () => ?GoogleTag = (): ?GoogleTag =>
+    typeof window !== "undefined" && window ? window.googletag : null;
+
   registerEventListener: (googletag: ?GoogleTag) => void = (
     googletag: ?GoogleTag
   ) => {
     if (googletag && googletag.apiReady) {
       googletag.cmd.push(() => {
-        //$FlowFixMe
         const pubadsService: PubAdsService = googletag.pubads();
 
         pubadsService.addEventListener(
@@ -139,15 +143,13 @@ class GooglePublisherTagManager {
     enableLoadSDKScriptByPromise: boolean,
     enableLoadLimitedAdsSDK: boolean
   ) => {
-    const { window } = global;
-    if (window && window.googletag) {
-      if (!window.googletag && enableLoadSDKScriptByPromise) {
-        loadGPTScript(enableLoadLimitedAdsSDK).then(googletag => {
-          this.registerEventListener(googletag);
-        });
-      } else {
-        this.registerEventListener(window.googletag);
-      }
+    if (typeof window !== "undefined" && window && window.googletag) {
+      const { googletag } = window;
+      this.registerEventListener(googletag);
+    } else if (enableLoadSDKScriptByPromise) {
+      loadGPTScript(enableLoadLimitedAdsSDK).then(googletag => {
+        this.registerEventListener(googletag);
+      });
     }
   };
 
@@ -174,26 +176,35 @@ class GooglePublisherTagManager {
     }
   };
 
-  unregisterSlot: (slotId: string) => void = (slotId: string) => {
-    this.destroyGPTSlots([slotId]);
+  unregisterSlot: (slotId: string, slot: Slot) => void = (
+    slotId: string,
+    slot: Slot
+  ) => {
+    this.destroyGPTSlots([slot]);
     this.registeredSlotsList.delete(slotId);
   };
 
   unregisterAllSlot: () => void = () => {
-    this.destroyGPTSlots([...this.registeredSlotsList.keys()]);
+    const allSlots: Slot[] = [];
+
+    this.registeredSlotsList.forEach(ads => {
+      ads.slot && allSlots.push(ads.slot);
+    });
+
+    this.destroyGPTSlots(allSlots);
     this.registeredSlotsList.clear();
   };
 
-  destroyGPTSlots: (slotIds: Array<string>) => Promise<mixed> = (
-    slotIds: Array<string>
+  destroyGPTSlots: (slots: Array<Slot>) => Promise<mixed> = (
+    slots: Array<Slot>
   ) => {
-    const { window } = global;
-    const { googletag } = window;
+    const googletag = this.getGoogletag();
+
     return new Promise((resolve, reject) => {
-      if (googletag?.apiReady && slotIds.length > 0) {
+      if (googletag && googletag.apiReady && slots.length > 0) {
         googletag.cmd.push(() => {
-          googletag.destroySlots(slotIds);
-          resolve(slotIds);
+          googletag.destroySlots(slots);
+          resolve(slots);
         });
       } else {
         reject();
@@ -234,9 +245,7 @@ class GooglePublisherTagManager {
 
   loadAds: () => Promise<mixed> = () =>
     new Promise(resolve => {
-      const { window } = global;
-
-      const googletag: ?GoogleTag = window && window.googletag;
+      const googletag: ?GoogleTag = this.getGoogletag();
 
       if (
         googletag &&
@@ -264,14 +273,6 @@ class GooglePublisherTagManager {
                 : null;
 
               if (definedSlot) {
-                // if (ads.isOutOfPageSlot) {
-                //   definedSlot.getTargetingKeys().forEach((key: string) => {
-                //     if (!key.includes('pubmatic')) {
-                //       definedSlot.clearTargeting(key);
-                //     }
-                //   });
-                // }
-
                 ads.targetingArguments &&
                   ads.targetingArguments.forEach((value, key) => {
                     definedSlot.setTargeting(
@@ -323,8 +324,8 @@ class GooglePublisherTagManager {
     });
 
   displayRegisteredAds: () => void = () => {
-    const { window } = global;
-    const { googletag } = window;
+    const googletag: ?GoogleTag =
+      typeof window !== "undefined" && window ? window.googletag : null;
     if (googletag && googletag.apiReady) {
       const filteredSlot = [];
 
@@ -342,22 +343,51 @@ class GooglePublisherTagManager {
   };
 
   displaySingleSlot: (slotId: string) => void = (slotId: string) => {
-    const { window } = global;
-    const { googletag } = window;
+    const googletag: ?GoogleTag =
+      typeof window !== "undefined" && window ? window.googletag : null;
     if (googletag && googletag.apiReady) {
-      const filteredSlot = [];
+      const filteredSlot: Slot[] = [];
 
       googletag.cmd.push(() => {
-        const slots = this.registeredSlotsList.get(slotId);
+        const slots: ?GeneralSlotType =
+          this.registeredSlotsList.get(slotId) || null;
 
-        if (slots) {
-          filteredSlot.push(slots);
+        if (slots && slots.slot) {
+          filteredSlot.push(slots.slot);
           googletag.display(slots.slotId);
           slots.loaded = true;
         }
       });
 
       googletag.pubads().refresh(filteredSlot);
+    }
+  };
+
+  refreshSingleSlot: (
+    slotId: string,
+    targetingArguments?: TargetingArgumentsType
+  ) => void = (slotId, targetingArguments) => {
+    const googletag: ?GoogleTag =
+      typeof window !== "undefined" && window ? window.googletag : null;
+    const slot = this.registeredSlotsList.get(slotId);
+    if (slot && googletag && googletag.apiReady) {
+      const definedSlot: ?Slot = slot.slot;
+      if (definedSlot) {
+        slot.targetingArguments = targetingArguments;
+        if (targetingArguments && targetingArguments.size > 0) {
+          definedSlot.clearTargeting();
+          targetingArguments &&
+            // eslint-disable-next-line sonarjs/no-identical-functions
+            targetingArguments.forEach((value, key) => {
+              definedSlot.setTargeting(
+                key,
+                Array.isArray(value) ? value : `${value}`
+              );
+            });
+        }
+
+        googletag.pubads().refresh([definedSlot]);
+      }
     }
   };
 
