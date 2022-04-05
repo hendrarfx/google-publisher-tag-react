@@ -15,5 +15,6 @@ export type {
   GoogleTag,
   PubAdsService,
   Slot,
-  OutOfPageFormat
+  OutOfPageFormat,
+  AdsSlotRef
 } from "./definition";
