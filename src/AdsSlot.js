@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/cognitive-complexity */
 //@flow
 import * as React from "react";
-import uuid from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import type {
   GeneralSize,
   ImpressionViewableEvent,
@@ -122,12 +122,9 @@ const AdsSlot = (props: Props) => {
     [onSlotVisibilityChanged, slotId]
   );
 
-  const refreshAds = React.useCallback(
-    (newArgument?: TargetingArgumentsType) => {
-      gptManager.refreshSingleSlot(slotId, props.targetingArguments);
-    },
-    [slotId, gptManager, props.targetingArguments]
-  );
+  const refreshAds = React.useCallback(() => {
+    gptManager.refreshSingleSlot(slotId, props.targetingArguments);
+  }, [slotId, gptManager, props.targetingArguments]);
 
   const displayAds = React.useCallback(() => {
     gptManager.displaySingleSlot(slotId);
@@ -137,7 +134,7 @@ const AdsSlot = (props: Props) => {
     if (!subscribeSlotToProvider) {
       const uniqueId = props.slotId
         ? props.slotId
-        : `${props.adUnit}-${uuid.v4({})}`;
+        : `${props.adUnit}-${uuidv4()}`;
       setSlotId(uniqueId);
 
       setSubscribeSlotToProvider(true);
