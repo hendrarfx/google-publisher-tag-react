@@ -1,6 +1,6 @@
 {
   "name": "gpt-ads-react",
-  "version": "1.0.32",
+  "version": "1.1.0",
   "description": "library to implement google publisher tag in react",
   "main": "index.js",
   "scripts": {
