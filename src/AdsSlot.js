@@ -18,7 +18,6 @@ import type {
   SlotResponseReceivedCallbackType,
   SlotVisibilityChangedEventCallbackType,
   Slot,
-  GoogleTag,
   AdsSlotRef,
   TargetingArgumentsType
 } from "./definition";
@@ -219,9 +218,9 @@ const AdsSlot = (props: Props) => {
   }, [divInjectSuccess, ref, slotId]);
 
   return props.disableRenderDiv ? null : !empty ? (
-    <div id={slotId} ref={ref}></div>
+    <div id={slotId} data-qa-id="adBox" ref={ref}></div>
   ) : (
-    <div id={slotId} />
+    <div id={slotId} data-qa-id="adBox" />
   );
 };
 
