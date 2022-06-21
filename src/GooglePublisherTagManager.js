@@ -71,6 +71,7 @@ class GooglePublisherTagManager {
   enableCollapseEmptyDivs: boolean = false;
   disablePublisherConsole: boolean = false;
   registeredSlotsList: Map<string, GeneralSlotType> = new Map();
+  isSucceedRegisterEventListener: boolean = false;
 
   constructor() {
     this.emitter = new EventEmitter().setMaxListeners(1);
@@ -139,6 +140,7 @@ class GooglePublisherTagManager {
             this.emitter.emit("slotVisibilityChangedListener", event);
           }
         );
+        this.isSucceedRegisterEventListener = true;
       });
     }
   };
@@ -152,7 +154,7 @@ class GooglePublisherTagManager {
   ) => {
     if (typeof window !== "undefined" && window && window.googletag) {
       const { googletag } = window;
-      this.registerEventListener(googletag);
+      //this.registerEventListener(googletag);
     } else if (enableLoadSDKScriptByPromise) {
       loadGPTScript(enableLoadLimitedAdsSDK).then(googletag => {
         this.registerEventListener(googletag);
@@ -261,6 +263,10 @@ class GooglePublisherTagManager {
       ) {
         googletag.cmd.push(() => {
           const pubadsService = googletag.pubads();
+
+          if (!this.isSucceedRegisterEventListener) {
+            this.registerEventListener(googletag);
+          }
 
           //disable publsiher console
           this.disablePublisherConsole && googletag.disablePublisherConsole();

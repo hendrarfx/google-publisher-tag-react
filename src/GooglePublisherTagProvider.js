@@ -122,7 +122,7 @@ const GooglePublisherTagProvider2 = (
     } else if (
       window &&
       initialitationDone &&
-      !window.googletag.apiReady &&
+      !window?.googletag?.apiReady &&
       gptManager.getRegisteredSlotList().size > 0
     ) {
       // handle window.googletag is not ready but initialitation is done
