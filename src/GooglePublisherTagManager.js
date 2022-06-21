@@ -22,7 +22,6 @@ import type {
   TargetingArgumentsType
 } from "./definition";
 import { loadGPTScript } from "./utils";
-import { all } from "lodash/fp";
 
 type GlobalConfigAds = {
   enablePersonalizeAds?: boolean,
@@ -46,7 +45,15 @@ type GeneralSlotType = {
   shouldRefresh?: boolean,
   loaded?: boolean,
   slot?: Slot,
-  disableInitialLoad?: boolean
+  disableInitialLoad?: boolean,
+  event: {
+    impressionViewable: ?ImpressionViewableEvent,
+    slotRequested: ?SlotRequestedEvent,
+    slotOnload: ?SlotOnloadEvent,
+    slotRenderEnded: ?SlotRenderEndedEvent,
+    slotResponseReceived: ?SlotResponseReceivedEvent,
+    slotVisibilityChanged: ?SlotVisibilityChangedEvent
+  }
 };
 
 type GeneralRegisterSlotListener = (object: { slotId: string }) => void;
@@ -393,6 +400,35 @@ class GooglePublisherTagManager {
 
   getRegisteredSlotList: () => Map<string, GeneralSlotType> = () =>
     this.registeredSlotsList;
+
+  updateRegisterSlotList: (
+    slotID: string,
+    type:
+      | "impressionViewable"
+      | "slotRequested"
+      | "slotOnload"
+      | "slotRenderEnded"
+      | "slotResponseReceived"
+      | "slotVisibilityChanged",
+    event: *
+  ) => void = (
+    slotID: string,
+    type:
+      | "impressionViewable"
+      | "slotRequested"
+      | "slotOnload"
+      | "slotRenderEnded"
+      | "slotResponseReceived"
+      | "slotVisibilityChanged",
+    event: *
+  ) => {
+    const slot = this.registeredSlotsList.get(slotID);
+    if (typeof window !== "undefined" && window && slot) {
+      slot.event[type] = event;
+      this.registeredSlotsList.set(slotID, slot);
+      window.listAds = this.registeredSlotsList;
+    }
+  };
 
   //
   // subscribe & unsub listener method

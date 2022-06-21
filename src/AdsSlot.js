@@ -47,7 +47,6 @@ const AdsSlot = (props: Props) => {
   const [slotId, setSlotId] = React.useState<string>("");
   const [empty, setEmpty] = React.useState<boolean>(false);
   const [slot, setSlot] = React.useState<?Slot>(null);
-
   const [divInjectSuccess, setDivInjectSuccess] = React.useState<boolean>(
     false
   );
@@ -71,54 +70,68 @@ const AdsSlot = (props: Props) => {
   const impressionViewableCallback = React.useCallback(
     (event: ImpressionViewableEvent) => {
       if (event.slot.getSlotElementId() === slotId) {
+        gptManager.updateRegisterSlotList(slotId, "impressionViewable", event);
         onImpressionViewable && onImpressionViewable(event);
       }
     },
-    [onImpressionViewable, slotId]
+    [onImpressionViewable, slotId, gptManager]
   );
   const slotOnloadCallback = React.useCallback(
     (event: SlotOnloadEvent) => {
       if (event.slot.getSlotElementId() === slotId) {
+        gptManager.updateRegisterSlotList(slotId, "slotOnload", event);
         onSlotOnload && onSlotOnload(event);
       }
     },
-    [onSlotOnload, slotId]
+    [onSlotOnload, slotId, gptManager]
   );
 
   const slotRenderEndedCallback = React.useCallback(
     (event: SlotRenderEndedEvent) => {
       if (event.slot.getSlotElementId() === slotId) {
+        gptManager.updateRegisterSlotList(slotId, "slotRenderEnded", event);
         setEmpty(Boolean(event.creativeId));
         onSlotRenderEnded && onSlotRenderEnded(event);
       }
     },
-    [onSlotRenderEnded, slotId]
+    [onSlotRenderEnded, slotId, gptManager]
   );
 
   const slotRequestedCallback = React.useCallback(
     (event: SlotRequestedEvent) => {
       if (event.slot.getSlotElementId() === slotId) {
+        gptManager.updateRegisterSlotList(slotId, "slotRequested", event);
         setSlot(event.slot);
         onSlotRequested && onSlotRequested(event);
       }
     },
-    [onSlotRequested, slotId]
+    [onSlotRequested, slotId, gptManager]
   );
   const slotResponseReceivedCallback = React.useCallback(
     (event: SlotResponseReceivedEvent) => {
       if (event.slot.getSlotElementId() === slotId) {
+        gptManager.updateRegisterSlotList(
+          slotId,
+          "slotResponseReceived",
+          event
+        );
         onSlotResponseReceived && onSlotResponseReceived(event);
       }
     },
-    [onSlotResponseReceived, slotId]
+    [onSlotResponseReceived, slotId, gptManager]
   );
   const slotVisibilityChangedCallback = React.useCallback(
     (event: SlotVisibilityChangedEvent) => {
       if (event.slot.getSlotElementId() === slotId) {
+        gptManager.updateRegisterSlotList(
+          slotId,
+          "slotVisibilityChanged",
+          event
+        );
         onSlotVisibilityChanged && onSlotVisibilityChanged(event);
       }
     },
-    [onSlotVisibilityChanged, slotId]
+    [onSlotVisibilityChanged, slotId, gptManager]
   );
 
   const refreshAds = React.useCallback(() => {
@@ -154,7 +167,15 @@ const AdsSlot = (props: Props) => {
         sizeMapping: props.sizeMapping,
         targetingArguments: props.targetingArguments,
         shouldRefresh: false,
-        loaded: false
+        loaded: false,
+        event: {
+          impressionViewable: null,
+          slotRequested: null,
+          slotOnload: null,
+          slotRenderEnded: null,
+          slotResponseReceived: null,
+          slotVisibilityChanged: null
+        }
       };
       providerContext.subscribeNewSlot(slotId, object);
       gptManager.registerSlot(object);
