@@ -46,7 +46,6 @@ type Props = {
 const AdsSlot = (props: Props) => {
   const ref = React.useRef(null);
   const [slotId, setSlotId] = React.useState<string>("");
-  const [empty, setEmpty] = React.useState<boolean>(false);
   const [slot, setSlot] = React.useState<?Slot>(null);
   const [divInjectSuccess, setDivInjectSuccess] = React.useState<boolean>(
     false
@@ -91,7 +90,6 @@ const AdsSlot = (props: Props) => {
     (event: SlotRenderEndedEvent) => {
       if (event.slot.getSlotElementId() === slotId) {
         gptManager.updateRegisterSlotList(slotId, "slotRenderEnded", event);
-        setEmpty(Boolean(event.creativeId));
         onSlotRenderEnded && onSlotRenderEnded(event);
       }
     },
@@ -241,10 +239,8 @@ const AdsSlot = (props: Props) => {
     }
   }, [divInjectSuccess, ref, slotId]);
 
-  return props.disableRenderDiv ? null : !empty ? (
+  return props.disableRenderDiv ? null : (
     <div id={slotId} data-qa-id="adBox" ref={ref}></div>
-  ) : (
-    <div id={slotId} data-qa-id="adBox" />
   );
 };
 
