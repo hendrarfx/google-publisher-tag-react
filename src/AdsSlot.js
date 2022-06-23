@@ -1,7 +1,6 @@
 /* eslint-disable sonarjs/cognitive-complexity */
 //@flow
 import * as React from "react";
-import { v4 as uuidv4 } from "uuid";
 import type {
   GeneralSize,
   ImpressionViewableEvent,
@@ -23,6 +22,8 @@ import type {
 } from "./definition";
 import { useGooglePublisherTagProviderContext } from "./GooglePublisherTagProvider";
 import { useGPTManagerInstance } from "./GooglePublisherTagManager";
+
+let COUNTER = 0;
 
 type Props = {
   networkId?: string,
@@ -144,9 +145,11 @@ const AdsSlot = (props: Props) => {
 
   React.useEffect(() => {
     if (!subscribeSlotToProvider) {
+      const uniqueID = COUNTER + 1;
+      COUNTER = uniqueID;
       const uniqueId = props.slotId
         ? props.slotId
-        : `${props.adUnit}-${uuidv4()}`;
+        : `${props.adUnit}-${uniqueID}`;
       setSlotId(uniqueId);
 
       setSubscribeSlotToProvider(true);
