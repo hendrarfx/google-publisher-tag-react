@@ -53,7 +53,8 @@ type GeneralSlotType = {
     slotRenderEnded: ?SlotRenderEndedEvent,
     slotResponseReceived: ?SlotResponseReceivedEvent,
     slotVisibilityChanged: ?SlotVisibilityChangedEvent
-  }
+  },
+  unmounted: boolean
 };
 
 type GeneralRegisterSlotListener = (object: { slotId: string }) => void;
@@ -72,6 +73,8 @@ class GooglePublisherTagManager {
   disablePublisherConsole: boolean = false;
   registeredSlotsList: Map<string, GeneralSlotType> = new Map();
   isSucceedRegisterEventListener: boolean = false;
+  isSucceedDefinePageSettingAds: boolean = false;
+  defineSingleRequest: boolean = false;
 
   constructor() {
     this.emitter = new EventEmitter().setMaxListeners(1);
@@ -190,18 +193,25 @@ class GooglePublisherTagManager {
     slot: Slot
   ) => {
     this.destroyGPTSlots([slot]);
-    this.registeredSlotsList.delete(slotId);
+
+    const generalSlot = this.registeredSlotsList.get(slotId);
+    if (typeof window !== "undefined" && window && generalSlot) {
+      generalSlot.unmounted = true;
+      this.registeredSlotsList.set(slotId, generalSlot);
+      window.listAds = this.registeredSlotsList;
+    }
   };
 
   unregisterAllSlot: () => void = () => {
     const allSlots: Slot[] = [];
-
-    this.registeredSlotsList.forEach(ads => {
+    const clone = new Map(this.registeredSlotsList);
+    clone.forEach(ads => {
       ads.slot && allSlots.push(ads.slot);
     });
 
     this.destroyGPTSlots(allSlots);
-    this.registeredSlotsList.clear();
+    this.registeredSlotsList = new Map();
+    window.listAds = this.registeredSlotsList;
   };
 
   destroyGPTSlots: (slots: Array<Slot>) => Promise<mixed> = (
@@ -228,11 +238,6 @@ class GooglePublisherTagManager {
     //configure initial load
     this.disableInitialLoad && pubadsService.disableInitialLoad();
 
-    //configure personalized ads
-    pubadsService.setRequestNonPersonalizedAds(
-      this.enablePersonalizeAds ? 0 : 1
-    );
-
     //configure global targeting argument
     this.globalTargetingArguments.size > 0 &&
       this.globalTargetingArguments.forEach((value, key) => {
@@ -240,12 +245,12 @@ class GooglePublisherTagManager {
         pubadsService.setTargeting(key, val);
       });
 
-    this.enableLazyLoad &&
-      pubadsService.enableLazyLoad({
-        fetchMarginPercent: 500, // Fetch slots within 5 viewports.
-        renderMarginPercent: 200, // Render slots within 2 viewports.
-        mobileScaling: 2.0 // Double the above values on mobile.
-      });
+    //  this.enableLazyLoad &&
+    pubadsService.enableLazyLoad({
+      fetchMarginPercent: 500, // Fetch slots within 5 viewports.
+      renderMarginPercent: 200, // Render slots within 2 viewports.
+      mobileScaling: 2.0 // Double the above values on mobile.
+    });
 
     //collapse div when ads is empty
     this.enableCollapseEmptyDivs &&
@@ -255,7 +260,6 @@ class GooglePublisherTagManager {
   loadAds: () => Promise<mixed> = () =>
     new Promise(resolve => {
       const googletag: ?GoogleTag = this.getGoogletag();
-
       if (
         googletag &&
         googletag.apiReady &&
@@ -270,10 +274,6 @@ class GooglePublisherTagManager {
 
           //disable publsiher console
           this.disablePublisherConsole && googletag.disablePublisherConsole();
-
-          this.definePageLevelSettings(pubadsService);
-          this.enableCollapseEmptyDivs &&
-            pubadsService.collapseEmptyDivs(this.enableCollapseEmptyDivs);
 
           this.registeredSlotsList.forEach(ads => {
             if (!ads.loaded) {
@@ -314,9 +314,9 @@ class GooglePublisherTagManager {
               }
             }
           });
-          //configure SRA
-          this.enableSingleRequest && pubadsService.enableSingleRequest();
         });
+
+        this.enableSingleRequest && googletag.pubads().enableSingleRequest();
 
         googletag.enableServices();
         //enabling service and display ads
@@ -332,9 +332,7 @@ class GooglePublisherTagManager {
         }
         resolve();
       }
-    }).catch(error => {
-      //console.log('error', error);
-    });
+    }).catch(error => {});
 
   displayRegisteredAds: () => void = () => {
     const googletag: ?GoogleTag =

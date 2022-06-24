@@ -55,6 +55,7 @@ const AdsSlot = (props: Props) => {
     subscribeSlotToProvider,
     setSubscribeSlotToProvider
   ] = React.useState<boolean>(false);
+  const [subscribeDone, setSubscribeDone] = React.useState<boolean>(false);
 
   const {
     onImpressionViewable,
@@ -145,17 +146,24 @@ const AdsSlot = (props: Props) => {
     if (!subscribeSlotToProvider) {
       const uniqueID = COUNTER + 1;
       COUNTER = uniqueID;
-      const uniqueId = props.slotId
-        ? props.slotId
-        : `${props.adUnit}-${uniqueID}`;
-      setSlotId(uniqueId);
 
+      const split = props.adUnit.split("/");
+      const adsID =
+        split && split.length > 1 && split[1]
+          ? `${split[1].toLowerCase()}-${uniqueID}`
+          : `ads-${uniqueID}`;
+      const uniqueId = props.slotId ? props.slotId : adsID;
+      setSlotId(uniqueId);
       setSubscribeSlotToProvider(true);
     }
+  }, [subscribeSlotToProvider, slotId, props.adUnit, props.slotId]);
+
+  React.useEffect(() => {
     if (
       providerContext.initialitationPhaseDone &&
       slotId &&
-      subscribeSlotToProvider
+      subscribeSlotToProvider &&
+      !subscribeDone
     ) {
       const object = {
         slotId: props.slotId ? props.slotId : slotId,
@@ -176,7 +184,8 @@ const AdsSlot = (props: Props) => {
           slotRenderEnded: null,
           slotResponseReceived: null,
           slotVisibilityChanged: null
-        }
+        },
+        unmounted: false
       };
       providerContext.subscribeNewSlot(slotId, object);
       gptManager.registerSlot(object);
@@ -193,14 +202,11 @@ const AdsSlot = (props: Props) => {
       gptManager.subscribeSlotVisibilityChangedEventListener(
         slotVisibilityChangedCallback
       );
+      setSubscribeDone(true);
     }
+
     return () => {
-      if (
-        providerContext.initialitationPhaseDone &&
-        slotId &&
-        slot &&
-        subscribeSlotToProvider
-      ) {
+      if (slotId && slot && subscribeSlotToProvider) {
         gptManager.unregisterSlot(slotId, slot);
         gptManager.unsubscribeImpressionViewableEventListener(
           impressionViewableCallback
@@ -221,7 +227,9 @@ const AdsSlot = (props: Props) => {
   }, [
     providerContext.initialitationPhaseDone,
     slotId,
-    subscribeSlotToProvider
+    subscribeSlotToProvider,
+    subscribeDone,
+    slot
   ]);
 
   React.useImperativeHandle(props.forwardRef, () => ({
