@@ -77,7 +77,7 @@ class GooglePublisherTagManager {
   defineSingleRequest: boolean = false;
 
   constructor() {
-    this.emitter = new EventEmitter().setMaxListeners(1);
+    this.emitter = new EventEmitter().setMaxListeners(0);
   }
 
   static createInstance: () => GooglePublisherTagManager = () =>
