@@ -274,7 +274,7 @@ class GooglePublisherTagManager {
 
           //disable publsiher console
           this.disablePublisherConsole && googletag.disablePublisherConsole();
-
+          this.definePageLevelSettings(pubadsService);
           this.registeredSlotsList.forEach(ads => {
             if (!ads.loaded) {
               const adUnit = `${ads.networkId}/${ads.adUnit}`;
