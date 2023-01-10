@@ -22,7 +22,8 @@ type Props = {
   enableLoadSDKScriptByPromise?: boolean,
   targetingArguments?: TargetingArgumentsType,
   adSenseAttributes?: TargetingArgumentsType,
-  disablePublisherConsole?: boolean
+  disablePublisherConsole?: boolean,
+  allowToLoadAds?: boolean
 };
 
 const GooglePublisherTagInitialContext = {
@@ -52,7 +53,8 @@ const GooglePublisherTagProvider2 = (
     children,
     networkId,
     enableLoadSDKScriptByPromise,
-    enableLoadLimitedAdsSDK
+    enableLoadLimitedAdsSDK,
+    allowToLoadAds
   } = props;
 
   const [initialitationDone, setInitialitationDone] = React.useState<boolean>(
@@ -116,10 +118,11 @@ const GooglePublisherTagProvider2 = (
 
   //step 1: when provider mounted, it will load gpt sdk and set config to manager
   React.useEffect(() => {
-    if (!initialitationDone) {
+    if (!initialitationDone && allowToLoadAds) {
       detectAdBlock();
       initialitationPhase();
     } else if (
+      allowToLoadAds &&
       window &&
       initialitationDone &&
       !window?.googletag?.apiReady &&
@@ -132,11 +135,15 @@ const GooglePublisherTagProvider2 = (
       }, 500);
     }
     return () => {
-      if (initialitationDone && gptManager.getRegisteredSlotList().size > 0) {
+      if (
+        allowToLoadAds &&
+        initialitationDone &&
+        gptManager.getRegisteredSlotList().size > 0
+      ) {
         gptManager.unregisterAllSlot();
       }
     };
-  }, [initialitationDone]);
+  }, [initialitationDone, allowToLoadAds]);
 
   return (
     <GooglePublisherTagContext.Provider
